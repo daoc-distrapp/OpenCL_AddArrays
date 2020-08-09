@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1209
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCL_AddArrays", "OpenCL_AddArrays\OpenCL_AddArrays.vcxproj", "{8685E46A-6D76-4E0F-9C1D-E52856FC048E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Debug|x64.ActiveCfg = Debug|x64
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Debug|x64.Build.0 = Debug|x64
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Debug|x86.ActiveCfg = Debug|Win32
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Debug|x86.Build.0 = Debug|Win32
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Release|x64.ActiveCfg = Release|x64
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Release|x64.Build.0 = Release|x64
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Release|x86.ActiveCfg = Release|Win32
+		{8685E46A-6D76-4E0F-9C1D-E52856FC048E}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B5FC602C-19BF-48B0-A91E-1434BC9F2C61}
+	EndGlobalSection
+EndGlobal
