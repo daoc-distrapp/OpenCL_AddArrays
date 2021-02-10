@@ -7,10 +7,6 @@ int main() {
 	cl_int length = 1024;
 	//cl_int length = 1 << 20;
 
-	// Trabajamos con la primera plataforma (driver) en el sistema
-	cl_platform_id platform;
-	clGetPlatformIDs(1, &platform, NULL);
-
 	// Crea el contexto para una GPU
 	cl_context context = clCreateContextFromType(NULL, CL_DEVICE_TYPE_GPU, NULL, NULL, NULL);
 
