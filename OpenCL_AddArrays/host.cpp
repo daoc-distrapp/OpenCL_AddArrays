@@ -1,85 +1,45 @@
 
 #include <CL/cl.h>
-#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main() {
-	// Cuántas plataformas (drivers, implementaciones, ...) hay?
-	cl_uint numPlatforms = 0;
-	clGetPlatformIDs(0, NULL, &numPlatforms);
-	printf("Numero de plataformas: %d\n", numPlatforms);
+	cl_int length = 1024;
+	//cl_int length = 1 << 20;
 
-	// Obtiene las IDs de todas las plataformas
-	std::vector<cl_platform_id> platforms(numPlatforms);
-	clGetPlatformIDs(numPlatforms, &platforms[0], NULL);
+	// Trabajamos con la primera plataforma (driver) en el sistema
+	cl_platform_id platform;
+	clGetPlatformIDs(1, &platform, NULL);
 
-	// Obtiene los nombres de todas las plataformas
-	for (int i = 0; i < numPlatforms; i++) {
-		std::vector<char> platformName(256);
-		clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 256, &platformName[i], NULL);
-		printf("Indice y Nombre de plataforma: %d | %s\n", i, &platformName[i]);
-	}
-
-	// El usuario escoge su plataforma
-	puts("Ingrese el indice (+ENTER) de la plataforma que desea: ");
-	int plat;
-	scanf("%d", &plat);
-
-	// Crea el contexto
-	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[plat], 0 };
-	cl_context context = clCreateContextFromType(contextProperties, CL_DEVICE_TYPE_GPU, NULL, NULL, NULL);
+	// Crea el contexto para una GPU
+	cl_context context = clCreateContextFromType(NULL, CL_DEVICE_TYPE_GPU, NULL, NULL, NULL);
 
 	// Obtiene el dispositivo
 	cl_device_id     device;
 	clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(cl_device_id), &device, NULL);
 
-	// Obtiene la versión de la plataforma
-	std::vector<char> tmp_platformVersion(256);
-	clGetPlatformInfo(platforms[plat], CL_PLATFORM_VERSION, 256, &tmp_platformVersion[0], NULL);
-	float platformVersion = (strstr(&tmp_platformVersion[0], "OpenCL 2.0") != NULL) ? 2.0f : 1.2f;
-	printf("Version de plataforma: %s\n", &tmp_platformVersion[0]);
-
-	// Obtiene la versión del dispositivo
-	std::vector<char> tmp_deviceVersion(256);
-	clGetDeviceInfo(device, CL_DEVICE_VERSION, 256, &tmp_deviceVersion[0], NULL);
-	float deviceVersion = (strstr(&tmp_deviceVersion[0], "OpenCL 2.0") != NULL) ? 2.0f : 1.2f;
-	printf("Version de dispositivo: %s\n", &tmp_deviceVersion[0]);
-
-	// Obtiene la versión del compilador
-	std::vector<char> tmp_compilerVersion(256);
-	clGetDeviceInfo(device, CL_DEVICE_OPENCL_C_VERSION, 256, &tmp_compilerVersion[0], NULL);
-	float compilerVersion = (strstr(&tmp_compilerVersion[0], "OpenCL C 2.0") != NULL) ? 2.0f : 1.2f;
-	printf("Version de compilador: %s\n", &tmp_compilerVersion[0]);
-
 	// Crea la cola de comandos (cola para las kernels)
 	cl_command_queue commandQueue;
-	if (deviceVersion == 2.0f) {
-		const cl_command_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-		commandQueue = clCreateCommandQueueWithProperties(context, device, properties, NULL);
-	}
-	else {
-		cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-		commandQueue = clCreateCommandQueue(context, device, properties, NULL);
-	}
+	commandQueue = clCreateCommandQueueWithProperties(context, device, NULL, NULL);
 
 	// Crea los buffer en el host, para los datos de entrada
-	// El buffer debe estar alineado con un tamaño de página de 4096, y su tamaño total debe ser múltiplo de 64
-	cl_int* inputA = (cl_int*)_aligned_malloc(sizeof(cl_int) * 1024, 4096);
-	cl_int* inputB = (cl_int*)_aligned_malloc(sizeof(cl_int) * 1024, 4096);
+	cl_int* inputA = (cl_int*)malloc(sizeof(cl_int) * length);
+	cl_int* inputB = (cl_int*)malloc(sizeof(cl_int) * length);
 
 	// Inicializa los buffer del host con los valores de entrada
-	for (cl_uint i = 0; i < 1024; i++) {
+	for (cl_int i = 0; i < length; i++) {
 		inputA[i] = i; //0,1,2,...,1023
-		inputB[i] = 1023 - i; //1023,1022,...,0
+		inputB[i] = length - i; //1023,1022,...,0
 	}
 
 	// Crea los buffer en la GPU, tanto para valores de entrada como para valores de salida
-	cl_mem gpuBuffer_A = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int) * 1024, NULL, NULL);
-	cl_mem gpuBuffer_B = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int) * 1024, NULL, NULL);
-	cl_mem gpuBuffer_C = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_int) * 1024, NULL, NULL);
+	cl_mem gpuBuffer_A = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int) * length, NULL, NULL);
+	cl_mem gpuBuffer_B = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int) * length, NULL, NULL);
+	cl_mem gpuBuffer_C = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_int) * length, NULL, NULL);
 
 	// Copia los valores de entrada desde los buffer del host a los buffer de la GPU
-	clEnqueueWriteBuffer(commandQueue, gpuBuffer_A, CL_TRUE, 0, sizeof(cl_int) * 1024, inputA, 0, NULL, NULL);
-	clEnqueueWriteBuffer(commandQueue, gpuBuffer_B, CL_TRUE, 0, sizeof(cl_int) * 1024, inputB, 0, NULL, NULL);
+	clEnqueueWriteBuffer(commandQueue, gpuBuffer_A, CL_TRUE, 0, sizeof(cl_int) * length, inputA, 0, NULL, NULL);
+	clEnqueueWriteBuffer(commandQueue, gpuBuffer_B, CL_TRUE, 0, sizeof(cl_int) * length, inputB, 0, NULL, NULL);
 
 	// Lee el código fuente de la kernel desde el archivo
 	char* source = NULL;
@@ -106,18 +66,21 @@ int main() {
 
 	// Ejecuta la kernel
 	size_t localSize = 64; //tamaño del bloque de ejecución
-	size_t globalSize = 1024; //número total de threads a ejecutar
+	size_t globalSize = length; //número total de threads a ejecutar
 	clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, &globalSize, &localSize, 0, NULL, NULL);
 	clFinish(commandQueue);
 
 	// Recupera el resultado desde la GPU y lo pone en un buffer del host
-	cl_int* outputC = (cl_int*)malloc(sizeof(cl_int) * 1024);
-	clEnqueueReadBuffer(commandQueue, gpuBuffer_C, CL_TRUE, 0, sizeof(cl_int) * 1024, outputC, 0, NULL, NULL);
+	cl_int* outputC = (cl_int*)malloc(sizeof(cl_int) * length);
+	clEnqueueReadBuffer(commandQueue, gpuBuffer_C, CL_TRUE, 0, sizeof(cl_int) * length, outputC, 0, NULL, NULL);
 
-	// Presenta el resultado
-	for (cl_uint i = 0; i < 1024; i++) {
-		printf("Resultados %d: (%d + %d = %d)\n", i, inputA[i], inputB[i], outputC[i]);
+	// Presenta el resultado (si es menor o igual a 1024)
+	if (length <= 1024) {
+		for (cl_uint i = 0; i < length; i++) {
+			printf("Resultados %d: (%d + %d = %d)\n", i, inputA[i], inputB[i], outputC[i]);
+		}
 	}
+	printf("Listo con talla %d !!!\n", length);
 
 	// Libera los recursos
 	delete[] source;
@@ -126,8 +89,8 @@ int main() {
 	clReleaseMemObject(gpuBuffer_A);
 	clReleaseMemObject(gpuBuffer_B);
 	clReleaseMemObject(gpuBuffer_C);
-	_aligned_free(inputA);
-	_aligned_free(inputB);
+	free(inputA);
+	free(inputB);
 	free(outputC);
 
 	// Fin !!!
